@@ -1,0 +1,7 @@
+{
+  "name": "create-data-node",
+  "version": "1.0.0",
+  "main": "index.js",
+  "author": "Timothy Parry <tim.parry@skybettingandgaming.com>",
+  "license": "MIT"
+}
