@@ -1,107 +1,39 @@
-const start = () => {
+import Axios from 'axios';
+import mongoose from 'mongoose';
+import dbConnect from "./utils/dbConnect.js"
+import { query, variables } from "./query.js"
+import { EventsModel } from "./models/eventsSchema.js"
 
+const start = async () => {
 
-const classId = {
-  // "NIN": [5,8]
-  "EQ": 5
-};
-fetch('https://events.green-1-aws.live.skybet.com/graphql', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    query: `query MarketQueryRenderer_MarketsQuery(
-      $eventFilter: EventFilter
-      $marketFilter: MarketFilter
-      $outcomeOrderBy: String
-      $outcomeOrderByDirection: OrderDirection
-    ) {
-      events(filter: $eventFilter) {
-        name
-        startTime
-        eventId
-        classId
-        eventType{
-          name
-          typeId
-        }
-        markets(filter: $marketFilter) {
-          ...StandardMarket_market
-          outcomes @order(by: $outcomeOrderBy, direction: $outcomeOrderByDirection) {
-            outcomeId
-          }
-        }
-      }
-    }
-
-    fragment Outcome_outcome on Outcome {
-      outcomeId
-      name
-      price {
-        decimal
-        num
-        den
-      }
-      status {
-        suspended
-        displayable
-      }
-    }
-
-    fragment StandardMarket_market on Market {
-      marketId
-      name
-      outcomes @order(by: $outcomeOrderBy, direction: $outcomeOrderByDirection) {
-        originalOutcome {
-          outcomeId
-          status {
-            suspended
-          }
-          price {
-            den
-            num
-            decimal
-          }
-        }
-        ...Outcome_outcome
-      }
-    }
-    `,
-    variables: {
-      "eventFilter": {
-        "HAS": [
-          "markets"
-        ],
-        "isOutright": false,
-        "isSpecial": false,
-        "status": {
-          "displayable": true,
-          "resulted": false,
-          "live": false,
-          "started": false,
-          "finished": false
-        },
-         "classId": classId
-      },
-      "marketFilter": {
-        "status": {
-          "displayable": true,
-          "resulted": false
-        },
-        "name": {
-          "EQ": "Price Boosts"
-        }
-      },
-      "outcomeOrderBy": null,
-      "outcomeOrderByDirection": null
+  const { data } = await Axios.post('https://events.green-1-aws.live.skybet.com/graphql', {
+    headers: {
+      'Content-Type': 'application/json',
     },
-  }),
-})
-  .then((res) => res.json())
-  .then((result) => console.log(JSON.stringify(result.data)));
-  setTimeout(start, 10000)
+    query,
+    variables
+  })
+
+  await savePriceboosts(data.data)
+
 }
+
+const savePriceboosts = async (boosts) => {
+  try {
+    await dbConnect(); 
+    // console.log(newBoost)
+    const filter = { _id: 5 }; // Assuming _id is present in the fixtureData
+    const update = { $set: {_id: 5, events: boosts.events} };
+    const options = { upsert: true };
+    await EventsModel.updateOne(filter, update, options);
+    console.log('Priceboosts saved successfully');
+  } catch (error) {
+    console.log(error)
+    // throw new Error('Error saving Priceboosts:', error.message);
+  } finally {
+    mongoose.connection.close();
+  }
+};
 
 start()
 
