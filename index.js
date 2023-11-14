@@ -35,7 +35,8 @@ const savePriceboosts = async (boosts) => {
 };
 
 start();
-cron.schedule('*/10 * * * *', () => {
+cron.schedule('0 * * * *', () => {
+  console.log("started with cron")
   start()
 });
 
