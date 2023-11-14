@@ -1,11 +1,11 @@
 import Axios from 'axios';
 import mongoose from 'mongoose';
-import dbConnect from "./utils/dbConnect.js"
-import { query, variables } from "./query.js"
+import cron from 'node-cron'
+import dbConnect from './utils/dbConnect.js'
+import { query, variables } from './query.js'
 import { EventsModel } from "./models/eventsSchema.js"
 
 const start = async () => {
-
   const { data } = await Axios.post('https://events.green-1-aws.live.skybet.com/graphql', {
     headers: {
       'Content-Type': 'application/json',
@@ -15,7 +15,6 @@ const start = async () => {
   })
 
   await savePriceboosts(data.data)
-
 }
 
 const savePriceboosts = async (boosts) => {
@@ -35,6 +34,9 @@ const savePriceboosts = async (boosts) => {
   }
 };
 
-start()
+start();
+cron.schedule('*/10 * * * *', () => {
+  start()
+});
 
 
